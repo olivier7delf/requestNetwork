@@ -26,18 +26,14 @@ export default abstract class ReferenceBasedDetector<TPaymentEventParameters>
    * @param paymentNetworkCreationParameters Parameters to create the extension
    * @returns The extensionData object
    */
-  public async createExtensionsDataForCreation(
-    paymentNetworkCreationParameters: ExtensionTypes.PnReferenceBased.ICreationParameters,
-  ): Promise<ExtensionTypes.IAction> {
+  public async createExtensionsDataForCreation<
+    T extends ExtensionTypes.PnReferenceBased.ICreationParameters
+  >(paymentNetworkCreationParameters: T): Promise<ExtensionTypes.IAction> {
     // If no salt is given, generate one
     paymentNetworkCreationParameters.salt =
       paymentNetworkCreationParameters.salt || (await Utils.crypto.generate8randomBytes());
 
-    return this.extension.createCreationAction({
-      paymentAddress: paymentNetworkCreationParameters.paymentAddress,
-      refundAddress: paymentNetworkCreationParameters.refundAddress,
-      ...paymentNetworkCreationParameters,
-    });
+    return this.extension.createCreationAction(paymentNetworkCreationParameters);
   }
 
   /**
@@ -149,55 +145,30 @@ export default abstract class ReferenceBasedDetector<TPaymentEventParameters>
         paymentNetwork.values.salt,
         paymentAddress,
       );
-      return await this.extractBalanceAndEventsFromPaymentRef(
+      const events = await this.extractEvents(
         paymentAddress,
         eventName,
         requestCurrency,
         paymentReference,
         paymentNetwork,
       );
+      const balance = this.computeBalance(events).toString();
+      return { balance, events };
     }
     return { balance: '0', events: [] };
   }
 
-  /**
-   * Extracts the balance and events matching an address and a payment reference
-   *
-   * @param address Address to check
-   * @param eventName Indicate if it is an address for payment or refund
-   * @param network The id of network we want to check
-   * @param paymentReference The reference to identify the payment
-   * @param paymentNetworkVersion the version of the payment network
-   * @returns The balance
-   */
-  protected async extractBalanceAndEventsFromPaymentRef(
-    address: string,
-    eventName: PaymentTypes.EVENTS_NAMES,
-    requestCurrency: RequestLogicTypes.ICurrency,
-    paymentReference: string,
-    paymentNetwork: ExtensionTypes.IState<any>,
-  ): Promise<PaymentTypes.IBalanceWithEvents<TPaymentEventParameters>> {
-    const events = await this.extractEvents(
-      address,
-      eventName,
-      requestCurrency,
-      paymentReference,
-      paymentNetwork,
-    );
-    const balance = events
+  protected computeBalance(
+    events: PaymentTypes.IPaymentNetworkEvent<TPaymentEventParameters>[],
+  ): BigNumber {
+    return events
       .sort(
         (
           a: PaymentTypes.IPaymentNetworkEvent<TPaymentEventParameters>,
           b: PaymentTypes.IPaymentNetworkEvent<TPaymentEventParameters>,
         ) => (a.timestamp || 0) - (b.timestamp || 0),
       )
-      .reduce((acc, event) => acc.add(BigNumber.from(event.amount)), BigNumber.from(0))
-      .toString();
-
-    return {
-      balance,
-      events,
-    };
+      .reduce((acc, event) => acc.add(BigNumber.from(event.amount)), BigNumber.from(0));
   }
 
   /**

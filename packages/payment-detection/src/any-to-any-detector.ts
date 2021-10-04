@@ -1,5 +1,4 @@
 import { ExtensionTypes, PaymentTypes, RequestLogicTypes } from '@requestnetwork/types';
-import Utils from '@requestnetwork/utils';
 import FeeReferenceBasedDetector from './fee-reference-based-detector';
 
 import { ICurrencyManager } from '@requestnetwork/currency';
@@ -32,19 +31,7 @@ export default abstract class AnyToAnyDetector<
   public async createExtensionsDataForCreation(
     paymentNetworkCreationParameters: ExtensionTypes.PnAnyToAnyConversion.ICreationParameters,
   ): Promise<ExtensionTypes.IAction> {
-    // If no salt is given, generate one
-    paymentNetworkCreationParameters.salt =
-      paymentNetworkCreationParameters.salt || (await Utils.crypto.generate8randomBytes());
-
-    return this.extension.createCreationAction({
-      feeAddress: paymentNetworkCreationParameters.feeAddress,
-      feeAmount: paymentNetworkCreationParameters.feeAmount,
-      paymentAddress: paymentNetworkCreationParameters.paymentAddress,
-      refundAddress: paymentNetworkCreationParameters.refundAddress,
-      network: paymentNetworkCreationParameters.network,
-      maxRateTimespan: paymentNetworkCreationParameters.maxRateTimespan,
-      ...paymentNetworkCreationParameters,
-    });
+    return super.createExtensionsDataForCreation(paymentNetworkCreationParameters);
   }
   /**
    * Extracts payment events of an address matching an address and a payment reference

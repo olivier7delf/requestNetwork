@@ -10,17 +10,6 @@ import EthInputDataInfoRetriever from './info-retriever';
 import EthProxyInputDataInfoRetriever from './proxy-info-retriever';
 import ReferenceBasedDetector from '../reference-based-detector';
 
-// interface of the object indexing the proxy contract version
-interface IProxyContractVersion {
-  [version: string]: string;
-}
-
-// the versions 0.1.0 and 0.2.0 have the same contracts
-const PROXY_CONTRACT_ADDRESS_MAP: IProxyContractVersion = {
-  ['0.1.0']: '0.1.0',
-  ['0.2.0']: '0.1.0',
-};
-
 /**
  * Handle payment networks with ETH input data extension
  */
@@ -70,7 +59,10 @@ export default class PaymentNetworkETHInputData extends ReferenceBasedDetector<P
       this.explorerApiKeys[network],
     );
     const events = await infoRetriever.getTransferEvents();
-    const proxyContractArtifact = await this.safeGetProxyArtifact(network, paymentNetwork.version);
+    const proxyContractArtifact = SmartContracts.ethereumProxyArtifact.getOptionalDeploymentInformation(
+      network,
+      paymentNetwork.version,
+    );
 
     if (proxyContractArtifact) {
       const proxyInfoRetriever = new EthProxyInputDataInfoRetriever(
@@ -87,21 +79,5 @@ export default class PaymentNetworkETHInputData extends ReferenceBasedDetector<P
       }
     }
     return events;
-  }
-
-  /*
-   * Fetches events from the Ethereum Proxy, or returns null
-   */
-  private async safeGetProxyArtifact(network: string, paymentNetworkVersion: string) {
-    const contractVersion = PROXY_CONTRACT_ADDRESS_MAP[paymentNetworkVersion];
-    try {
-      return SmartContracts.ethereumProxyArtifact.getDeploymentInformation(
-        network,
-        contractVersion,
-      );
-    } catch (error) {
-      console.warn(error);
-    }
-    return null;
   }
 }

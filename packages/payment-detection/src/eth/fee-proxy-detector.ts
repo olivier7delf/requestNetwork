@@ -9,15 +9,6 @@ import {
 import ProxyEthereumInfoRetriever from './proxy-info-retriever';
 import FeeReferenceBasedDetector from '../fee-reference-based-detector';
 
-// interface of the object indexing the proxy contract version
-interface IProxyContractVersion {
-  [version: string]: string;
-}
-
-const PROXY_CONTRACT_ADDRESS_MAP: IProxyContractVersion = {
-  ['0.1.0']: '0.1.0',
-};
-
 /**
  * Handle payment networks with ETH input data extension
  */
@@ -51,7 +42,10 @@ export default class ETHFeeProxyDetector extends FeeReferenceBasedDetector<Payme
   ): Promise<PaymentTypes.ETHPaymentNetworkEvent[]> {
     const network = this.getPaymentChain(requestCurrency, paymentNetwork);
 
-    const proxyContractArtifact = await this.safeGetProxyArtifact(network, paymentNetwork.version);
+    const proxyContractArtifact = SmartContracts.ethereumFeeProxyArtifact.getOptionalDeploymentInformation(
+      network,
+      paymentNetwork.version,
+    );
 
     if (!proxyContractArtifact) {
       throw Error('ETH fee proxy contract not found');
@@ -67,21 +61,5 @@ export default class ETHFeeProxyDetector extends FeeReferenceBasedDetector<Payme
     );
 
     return await proxyInfoRetriever.getTransferEvents();
-  }
-
-  /*
-   * Fetches events from the Ethereum Proxy, or returns null
-   */
-  private async safeGetProxyArtifact(network: string, paymentNetworkVersion: string) {
-    const contractVersion = PROXY_CONTRACT_ADDRESS_MAP[paymentNetworkVersion];
-    try {
-      return SmartContracts.ethereumFeeProxyArtifact.getDeploymentInformation(
-        network,
-        contractVersion,
-      );
-    } catch (error) {
-      console.warn(error);
-    }
-    return null;
   }
 }
