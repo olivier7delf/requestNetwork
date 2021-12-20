@@ -9,16 +9,10 @@ import { EthFeeProxyPaymentDetector, EthInputDataPaymentDetector } from './eth';
 import { initPaymentDetectionApiKeys, setProviderFactory, getDefaultProvider } from './provider';
 import { getTheGraphClient, networkSupportsTheGraph } from './thegraph';
 import { parseLogArgs, padAmountForChainlink, unpadAmountFromChainlink } from './utils';
-import { NearInfoRetriever } from './near-info-retriever';
 import { NearNativeTokenPaymentDetector } from './near-detector';
 import { FeeReferenceBasedDetector } from './fee-reference-based-detector';
 
 export type { TheGraphClient } from './thegraph';
-
-const Near = {
-  InfoRetriever: NearInfoRetriever,
-  getContractName: NearNativeTokenPaymentDetector.getNearContractName,
-};
 
 export {
   PaymentNetworkFactory,
@@ -31,7 +25,7 @@ export {
   AnyToERC20PaymentDetector,
   AnyToEthFeeProxyPaymentDetector,
   FeeReferenceBasedDetector,
-  Near,
+  NearNativeTokenPaymentDetector,
   setProviderFactory,
   initPaymentDetectionApiKeys,
   getDefaultProvider,
