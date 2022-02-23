@@ -31,7 +31,7 @@ The contract contains one function called `transferWithReferenceAndFee` which ta
 - `feeAmount` is the amount of ethers to transfer to the fee destination address
 - `feeAddress` is the destination address for the fee
 
-The `TransferWithReferenceAndFee` event is emitted when the tokens are transfered. This event contains the same 6 arguments, the `transferWithReferenceAndFee` parameters and:
+The `TransferWithReferenceAndFee` event is emitted when the tokens are transfered. This event contains 5 arguments, the `transferWithReferenceAndFee` parameters and:
 
 - `amount` is the amount of ethers to transfer to the destination address
 
